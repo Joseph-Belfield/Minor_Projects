@@ -165,18 +165,22 @@ void cleanup_barManager(struct BarManager* manager)
 
 int main()
 {
+	int barLength = 60;	// length of bar in seconds
+
 	// Initialize managing struct.
 	struct BarManager manager;	
-	if (!init_barManager(&manager, 60))
+	if (!init_barManager(&manager, barLength))
 	{
 		printf("Bar Manager unable to be initialized!\n");
 		return -1;
 	}
 
-	struct Tick tick = {0, 0.0f, 0};
-	getTickData("mock_data.csv", 2, &tick);
-	printTickData(&tick);
-
+	// Iterate through ticks, accumulating data, until one bar worth of time has passed.
+	// - get start time of current bar
+	// - while less than one bar of time has passed, track stats accordingly
+	// - at end of bar, move stats to bar manager and move on
+	// - repeat until end of data
+			
 
 	cleanup_barManager(&manager);
 }
