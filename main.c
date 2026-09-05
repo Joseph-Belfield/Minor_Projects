@@ -11,16 +11,17 @@ typedef void (*ManagerOutput)(struct BarManager*, int);
 struct BarManager
 {
 	int duration;	// the length of a single bar in seconds
-	
+	int numberOfBars;
+
 	// all tracked metrics per bar - stored in arrays, where bar 1 is at index 0, etc.
 	float* open;
 	float* high;
 	float* low;
 	float* close;
 	int* volume;
-	float* VWAP;
 
 	ManagerOutput printBarStats;
+	ManagerOutput printVWAP;
 };
 
 struct Tick
@@ -37,7 +38,48 @@ void printBarStats(struct BarManager* self, int barID)
 	printf("Low: %f\n", self->low[barID]);
 	printf("Close: %f\n", self->close[barID]);
 	printf("Volume: %d\n", self->volume[barID]);
-	printf("VWAP: %f\n", self->VWAP[barID]);
+}
+
+float calculateVWAP(struct BarManager* manager, int barID)
+{
+	// VWAP must be calculated using sum(typical price x volume) / sum(volume)
+	// typical price = (high + low + close) / 3
+	int VWAP;
+
+	if (barID > manager->numberOfBars) 
+	{
+		printf("Bar outside range!\n");
+		return -1.0f;
+	}
+
+	float numerator;		// sum(typical price x volume)
+	float denominator;		// sum(volume)
+	
+	for (int i = 0; i < barID; i++)
+	{
+		float typicalPrice = (manager->high[i] + manager->low[i] + manager->close[i]) / 3.0f;
+		numerator += typicalPrice * manager->volume[i];
+
+		denominator += manager->volume[i];
+	}
+
+	// prevent divide by zero errors
+	if (denominator <= 0.0f)
+	{
+		printf("Divide by 0 error!\n");
+		return -1.0f;
+	}
+
+	VWAP = (float)numerator / denominator;
+
+	return VWAP;
+}
+
+void printVWAP(struct BarManager* self, int barID)
+{
+	float currentVWAP = calculateVWAP(self, barID);
+	printf("The VWAP at bar %d is %.2f.\n", barID, currentVWAP);
+
 }
 
 // constructor, managers will keep entries for an hour before overwriting them
@@ -47,30 +89,29 @@ bool init_barManager(struct BarManager* manager, int barDuration)
 	
 	// Calculate number of bars in one hour
 	int secondsInHour = 3600;
-	int numberOfBars = (secondsInHour / barDuration);
-	if (secondsInHour % barDuration) numberOfBars++;  // if there's remainder, add on overflow bar
+	manager->numberOfBars = (secondsInHour / barDuration);
+	if (secondsInHour % barDuration) manager->numberOfBars++;  // if there's remainder, add one
 
 	// Reserve space for arrays (for one hour worth of bars)
-	manager->open = malloc(numberOfBars * sizeof(float));
-	manager->high = malloc(numberOfBars * sizeof(float));
-	manager->low = malloc(numberOfBars * sizeof(float));	
-	manager->close = malloc(numberOfBars * sizeof(float));
-	manager->volume = malloc(numberOfBars * sizeof(int));	
-	manager->VWAP = malloc(numberOfBars * sizeof(float));
+	manager->open = malloc(manager->numberOfBars * sizeof(float));
+	manager->high = malloc(manager->numberOfBars * sizeof(float));
+	manager->low = malloc(manager->numberOfBars * sizeof(float));	
+	manager->close = malloc(manager->numberOfBars * sizeof(float));
+	manager->volume = malloc(manager->numberOfBars * sizeof(int));	
 
 	// Malloc Error Management
 	if (manager->open == NULL ||
 		manager->high == NULL ||
 		manager->low == NULL ||
 		manager->close == NULL ||
-		manager->volume == NULL ||
-		manager->VWAP == NULL)
+		manager->volume == NULL)
 	{
 		printf("Memory Allocation Error!\n");
 		return false;
 	}
 
 	manager->printBarStats = printBarStats;
+	manager->printVWAP = printVWAP;
 
 	return true;
 }
@@ -160,12 +201,12 @@ void cleanup_barManager(struct BarManager* manager)
 	free(manager->low);
 	free(manager->close);
 	free(manager->volume);
-	free(manager->VWAP);
 }
 
 int main()
 {
 	int barLength = 60;	// length of bar in seconds
+	char* filename = "mock_data.csv";
 
 	// Initialize managing struct.
 	struct BarManager manager;	
@@ -179,8 +220,48 @@ int main()
 	// - get start time of current bar
 	// - while less than one bar of time has passed, track stats accordingly
 	// - at end of bar, move stats to bar manager and move on
-	// - repeat until end of data
-			
+	// - repeat until end of data	
+	
+	struct Tick tick;	// struct to hold data every tick
+	getTickData(filename, 1, &tick);
+	const int startTime = tick.time;
+
+	int currentLine = 1;
+	int currentBar = 0;
+	bool firstBar = true;
+	bool isLinesRemaining = true;
+	while (isLinesRemaining)
+	{
+		isLinesRemaining = getTickData(filename, currentLine, &tick);
+
+		// if beginning of new bar
+		if (currentBar < (tick.time - startTime) % barLength || firstBar)
+		{
+			firstBar = false;
+			currentBar = (tick.time - startTime) / barLength;
+			manager.open[currentBar] = tick.price;
+			manager.high[currentBar] = tick.price;
+			manager.low[currentBar] = tick.price;
+		}
+		
+		
+		if (tick.price > manager.high[currentBar]) manager.high[currentBar] = tick.price;
+		if (tick.price < manager.low[currentBar]) manager.low[currentBar] = tick.price;
+
+		manager.volume[currentBar] += tick.volume;
+
+		manager.close[currentBar] = tick.price;
+		currentLine++;
+	}
+
+	for (int i = 0; i < 60; i += 9)
+	{
+		manager.printBarStats(&manager, i);
+	}
+
+	manager.printVWAP(&manager, 10);
+	manager.printVWAP(&manager, 30);
+	manager.printVWAP(&manager, manager.numberOfBars); 
 
 	cleanup_barManager(&manager);
 }
