@@ -37,7 +37,7 @@ bool init_BarManager(struct BarManager *manager, int barDuration)
 	return true;
 }
 
-void delete_BarManager(struct BarManager *manager)
+void cleanup_BarManager(struct BarManager *manager)
 {
 	free(manager->open);
 	free(manager->high);
@@ -51,8 +51,27 @@ void delete_BarManager(struct BarManager *manager)
 int main()
 {
 	
+	struct BarManager manager;
+	const int minute = 60;
+	init_BarManager(&manager, minute);
+
+	// Read entries from file.
+	// When current bar begins/ends, log open/close price accordingly and begin tracking new bar.	
+	// Continue until last data entry reached.
 
 
-
+	cleanup_BarManager(&manager);
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
