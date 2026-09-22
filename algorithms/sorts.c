@@ -39,38 +39,32 @@ bool insertionSort(int* array, int arrayLength)
 {
 	for (int i = 0; i < arrayLength; i++)
 	{
-		for (int j = 0; j < i; j++)
+		int pivot = array[i];
+		int index = i;
+		while (array[index-1] > array[index] && index > 0)
 		{
-		
+			int temp = array[index];
+			array[index] = array[index - 1];
+			array[index-1] = temp;
+
+			index--;
 		}
 	}
+
+	return true;
 }
 
 bool quickSort(int* array, int arrayLength)
 {
-	if (arrayLength == 1)
-	{
-		return true;
-	}
-	
-	int pivot = array[0];
-	for (int i = 1; i < arrayLength - 1; i++)
-	{
-		if (array[i] < pivot)
-		{
-
-		}
-
-	}
 
 }
 
 int main()
 {
-	int array[] = {4,7,2,57,43,23,125,2};
-	bubbleSort(array, 8);
+	int array[] = {4,7,2,57,-43,23,125,2,-5,36};
+	bubbleSort(array, 10);
 	
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < 10; i++)
 	{
 		printf("%d\n", array[i]);
 	}
