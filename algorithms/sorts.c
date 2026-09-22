@@ -9,6 +9,8 @@
 // ====================
 void reverseElements(int* array, int arrayLength)
 {
+	if (arrayLength <= 1) return;
+
 	// swap pointers closing in from front and back until they meet at the middle
 	int* leftPtr = array;
 	int* rightPtr = array + (arrayLength - 1);
@@ -81,15 +83,20 @@ void insertionSort(int* array, int arrayLength)
 	for (int i = 0; i < arrayLength; i++)
 	{
 		int pivot = array[i];
-		int index = i;
-		while (array[index-1] > array[index] && index > 0)
+		
+		// find correct position of new pivot in sorted part of list
+		int targetIndex = i;
+		for (int j = 0; j < i; j++)
 		{
-			int temp = array[index];
-			array[index] = array[index - 1];
-			array[index-1] = temp;
-
-			index--;
+			if (array[j] > pivot) 
+			{
+				targetIndex = j;
+				break;
+			}
 		}
+
+		// move pivot to correct place
+		rotateElements(array + targetIndex, (i - targetIndex) + 1, 1, false);
 	}
 }
 
@@ -105,7 +112,7 @@ void quickSort(int* array, int arrayLength)
 		if (array[index] > pivot)
 		{
 			// move item to end, move all other items down, repeat current index by not incrementing (new value in place)
-			rotateElements(array + index, arrayLength - index, 1, true);		
+			rotateElements(array + index, arrayLength - index, 1, false);		
 		}
 		else index++;
 	}
@@ -118,7 +125,7 @@ void quickSort(int* array, int arrayLength)
 int main()
 {
 	int array[] = {4,7,2,57,-43,23,125,2,-5,36};
-	quickSort(array, 10);
+	insertionSort(array, 10);
 	
 	for (int i = 0; i < 10; i++)
 	{
