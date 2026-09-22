@@ -50,8 +50,3 @@ int binarySearch(int* array, int arrayLength, int target)
 	return -1;
 }
 
-int binarySearch_recursive(int* array, int arrayLength, int target)
-{
-	int* leftPtr = array;
-	int* rightPtr = array + (arrayLength - 1);
-}
