@@ -1,8 +1,9 @@
 // Different sorting functions
 
 #include <stdio.h>
-#include <stdbool.h>
 
+#include <stdbool.h>
+#include <string.h> // for memcpy
 
 // ====================
 //   HELPER FUNCTIONS
@@ -73,9 +74,63 @@ void bubbleSort(int* array, int arrayLength)
 	}
 }
 
+// returns the pointer to the most sorted list option
+void merge_MergeSort(int* leftArray, int leftLength, int* rightArray, int rightLength, int* outputArray)
+{
+	int outputLength = leftLength + rightLength;
+	for (int i = 0, leftIndex = 0, rightIndex = 0; i < outputLength; i++)
+	{	
+		if (leftIndex >= leftLength)
+		{
+			outputArray[i] = rightArray[rightIndex];
+			rightIndex++;
+		}
+		else if (rightIndex >= rightLength)
+		{
+			outputArray[i] = leftArray[leftIndex];
+			leftIndex++;
+		}
+		else if (rightArray[rightIndex] < leftArray[leftIndex])
+		{
+			outputArray[i] = rightArray[rightIndex];
+			rightIndex++;
+		}
+		else 
+		{
+			outputArray[i] = leftArray[leftIndex];
+			leftIndex++;
+		}
+	}
+}
+
+// Uses ping-pong strategy, where data is copied back and forth from one array to another, slowly merging upwards
+int* split_MergeSort(int* srcArray, int* destArray, int arrayLength)
+{
+	// broken down as far as possible
+	if (arrayLength <= 1) 
+	{
+		if (arrayLength == 1) destArray[0] = srcArray[0];
+		return destArray;		
+	}
+
+	int midpoint = arrayLength / 2;
+
+	int* sortedLeft = split_MergeSort(destArray, srcArray, midpoint);
+	int* sortedRight = split_MergeSort(destArray + midpoint, srcArray + midpoint, arrayLength - midpoint);
+	merge_MergeSort(sortedLeft, midpoint, sortedRight, arrayLength - midpoint, destArray);
+
+	return destArray;
+}
+
+// This function acts as a wrapper around the recursive split function to ensure it can have stack memory allocated for it
 void mergeSort(int* array, int arrayLength)
 {
+	int tempArray[arrayLength];
+
+	int* destArray = split_MergeSort(array, tempArray, arrayLength);
 	
+	size_t arraySize = arrayLength * sizeof(int);
+	if (destArray != array) memcpy(array, destArray, arraySize);	// ensures original array contains sorted response 	
 }
 
 void insertionSort(int* array, int arrayLength)
@@ -124,8 +179,8 @@ void quickSort(int* array, int arrayLength)
 
 int main()
 {
-	int array[] = {4,7,2,57,-43,23,125,2,-5,36};
-	insertionSort(array, 10);
+	int array[] = {5, 2, 4, 1, -24, 246, -21, 5235, 32, -21};
+	mergeSort(array, 10);
 	
 	for (int i = 0; i < 10; i++)
 	{
