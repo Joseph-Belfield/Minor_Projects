@@ -92,7 +92,10 @@ float matrix_det_LaplaceExpansion(int rows, float mat[rows][rows])
 
 float matrix_det_GaussianElimination(int rows, float mat[rows][rows])
 {
-	// works kinda like simplex	
+	// works kinda like simplex
+	
+
+		
 }
 
 // Gets determinant of matrix. Only works on square matrices, so only need rows.
