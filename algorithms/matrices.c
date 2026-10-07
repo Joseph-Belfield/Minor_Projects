@@ -93,9 +93,31 @@ float matrix_det_LaplaceExpansion(int rows, float mat[rows][rows])
 float matrix_det_GaussianElimination(int rows, float mat[rows][rows])
 {
 	// works kinda like simplex
-	
+	for (int col = 0; col < rows; col++)
+	{
+		// find the row with the greatest absolute value in pivot position
+		float pivotRow = col;
+		for (int row = col; row < rows; row++)
+		{
+			if (fabsf(mat[row][col]) > fabsf(mat[largestPivot][col]) largestPivot = row;
+		}
 
-		
+		// swap row with greatest pivot to current pivot position
+		for (int i = 0; i < rows; i ++)
+		{
+			float temp = mat[col][i];
+			mat[col][i] = mat[largestPivot][i];
+			mat[largestPivot][i] = temp;
+		}
+
+		// find the row multiple for each row, then subtract lots of pivot row until column below pivot is 0.
+		for (int row = col; row < rows; row++)
+		{
+			float rowMultiple = mat[row][col] / row[col][col];
+
+			// continue from here
+		}
+	}	
 }
 
 // Gets determinant of matrix. Only works on square matrices, so only need rows.
